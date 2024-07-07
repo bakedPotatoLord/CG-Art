@@ -7,6 +7,8 @@ type vec4 = [number, number, number, number]
 
 const canvas = ref<HTMLCanvasElement | null>(null)
 
+const progress = ref("")
+
 const cw = ref(400);
 const ch = ref(400);
 
@@ -23,6 +25,8 @@ onMounted(async () => {
     const img = ctx.createImageData(ch.value, cw.value)
 
     const visited: boolean[] = Array(cw.value * ch.value).fill(false)
+
+    let numVisited= 0;
 
     function getPointData(x: number, y: number) {
       const start = ((y * cw.value) + x) * 4
@@ -69,15 +73,12 @@ onMounted(async () => {
         [x - 0, y - 1],
         [x - 0, y + 1],
         //self
-        [x,y]
 
       ]).filter(isValid)
     }
-
     function vectorAvg(vec:vec4[]){
       return <vec4>vec.slice(1).reduce(([a1,a2,a3,a4],[b1,b2,b3,b4])=>[a1+b1,a2+b2,a3+b3,a4+b4],vec[0]).map(val=>val/vec.length)
     }
-
     function shuffle(arr:any[]){
       return arr.sort(()=>Math.random() - 0.5)
     }
@@ -85,53 +86,35 @@ onMounted(async () => {
       return v1[0] == v2[0] && v2[0] == v2[1]
     }
 
-
     const que: vec2[] = [[0, 0]]
 
     setPointData(...[0,1],128,0,0,255)
     setVisited(true,0,1)
 
-    let num = 0
-
     while (que.length) {
       const curr = <vec2>que.pop()
-        //console.log(que)
         if (!isVisited(curr)) {
-          //console.log("looking at", curr[0],curr[1])
+          progress.value = ("visited: "+(numVisited/(cw.value*ch.value)*100).toFixed(2)+"% que length: "+que.length);
           setVisited(true, ...curr);
+          numVisited++;
 
           const neighbors = getNeighbors(curr)
-          
-
           que.push(...shuffle(neighbors));
           const neighborPaints = neighbors
           .filter(isVisited)
           .map((n)=>getPointData(...n))
-          .filter(vec=>vec[3] != 0)
           
           const avgPaint = vectorAvg(neighborPaints)
-          
-          
           const avgRed = avgPaint[0]
 
-        //console.log("avgRed",avgRed,"neighborPaints",neighborPaints,avgPaint)
-          
         setPointData(...curr, mutate(avgRed,15,0,255),0,0,255)
 
         ctx.putImageData(img, 0, 0)
-        await new Promise(res=>setTimeout(res,1))
+        await new Promise(res=>setTimeout(res,0))
 
-      }else{
-        continue;
       }
     }
-
-
-    console.log(vectorAvg([[1,1,1,0],[2,4,1,1]]))
-
     ctx.putImageData(img, 0, 0)
-
-    console.log(img)
   }
 })
 
@@ -140,11 +123,33 @@ onMounted(async () => {
 
 <template>
   <div class="main">
-    <canvas class="c" ref="canvas" :width="cw" :height="ch"></canvas>
+    <div class="canvasContainer">
+      <canvas class="c" ref="canvas" :width="cw" :height="ch"></canvas>
+      <div class="details">
+        <h4>{{ progress }}</h4>
+
+      </div>
+      
+    </div>
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
+
+.main{
+
+  .canvasContainer{
+    display:flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    .details{
+      width: fit-content;
+      
+    }
+  }
+}
+
 canvas {
   border: 2px dashed black;
 }
