@@ -9,8 +9,8 @@ const canvas = ref<HTMLCanvasElement | null>(null)
 
 const progress = ref("")
 
-const cw = ref(400);
-const ch = ref(400);
+const cw = ref(1000);
+const ch = ref(1000);
 
 const mutateRate = 5
 
@@ -26,11 +26,11 @@ onMounted(async () => {
 
     const visited: boolean[] = Array(cw.value * ch.value).fill(false)
 
-    let numVisited= 0;
+    let numVisited = 0;
 
     function getPointData(x: number, y: number) {
       const start = ((y * cw.value) + x) * 4
-      return <vec4> Array.from(img.data.slice(start,start+4))
+      return <vec4>Array.from(img.data.slice(start, start + 4))
     }
 
     function setPointData(x: number, y: number, ...[r = 0, g = 0, b = 0, a = 0]: vec4) {
@@ -76,42 +76,41 @@ onMounted(async () => {
 
       ]).filter(isValid)
     }
-    function vectorAvg(vec:vec4[]){
-      return <vec4>vec.slice(1).reduce(([a1,a2,a3,a4],[b1,b2,b3,b4])=>[a1+b1,a2+b2,a3+b3,a4+b4],vec[0]).map(val=>val/vec.length)
+    function vectorAvg(vec: vec4[]) {
+      return <vec4>vec.slice(1)
+        .reduce(([a1, a2, a3, a4], [b1, b2, b3, b4]) => [a1 + b1, a2 + b2, a3 + b3, a4 + b4], vec[0])
+        .map(val => val / vec.length)
     }
-    function shuffle(arr:any[]){
-      return arr.sort(()=>Math.random() - 0.5)
+    function shuffle(arr: any[]) {
+      return arr.sort(() => Math.random() - 0.5)
     }
-    function vecEquals(v1:vec2,v2:vec2){
+    function vecEquals(v1: vec2, v2: vec2) {
       return v1[0] == v2[0] && v2[0] == v2[1]
     }
 
     const que: vec2[] = [[0, 0]]
-
-    setPointData(...[0,1],128,0,0,255)
-    setVisited(true,0,1)
+    setPointData(...[0, 1], 128, 0, 0, 255)
+    setVisited(true, 0, 1)
 
     while (que.length) {
       const curr = <vec2>que.pop()
-        if (!isVisited(curr)) {
-          progress.value = ("visited: "+(numVisited/(cw.value*ch.value)*100).toFixed(2)+"% que length: "+que.length);
-          setVisited(true, ...curr);
-          numVisited++;
-
-          const neighbors = getNeighbors(curr)
-          que.push(...shuffle(neighbors));
-          const neighborPaints = neighbors
+      if (!isVisited(curr)) {
+        progress.value = ("visited: " +
+          (numVisited / (cw.value * ch.value) * 100).toFixed(2) +
+          "% que length: " +
+          que.length);
+        setVisited(true, ...curr);
+        numVisited++;
+        const neighbors = getNeighbors(curr)
+        que.push(...shuffle(neighbors));
+        const neighborPaints = neighbors
           .filter(isVisited)
-          .map((n)=>getPointData(...n))
-          
-          const avgPaint = vectorAvg(neighborPaints)
-          const avgRed = avgPaint[0]
-
-        setPointData(...curr, mutate(avgRed,15,0,255),0,0,255)
-
+          .map((n) => getPointData(...n))
+        const avgPaint = vectorAvg(neighborPaints)
+        const avgRed = avgPaint[0]
+        setPointData(...curr, mutate(avgRed, 15, 0, 255), 0, 0, 255)
         ctx.putImageData(img, 0, 0)
-        await new Promise(res=>setTimeout(res,0))
-
+        await new Promise(res => setTimeout(res, 0))
       }
     }
     ctx.putImageData(img, 0, 0)
@@ -129,23 +128,23 @@ onMounted(async () => {
         <h4>{{ progress }}</h4>
 
       </div>
-      
+
     </div>
   </div>
 </template>
 
 <style scoped lang="scss">
+.main {
 
-.main{
-
-  .canvasContainer{
-    display:flex;
+  .canvasContainer {
+    display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    .details{
+
+    .details {
       width: fit-content;
-      
+
     }
   }
 }
