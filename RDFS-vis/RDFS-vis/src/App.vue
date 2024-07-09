@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue"
+import worker from "./utils/worker?worker"
+import type { workerResponse } from "./utils/worker"
 
 type vec2 = [number, number]
 type vec4 = [number, number, number, number]
@@ -16,6 +18,8 @@ const abortRender = ref(false)
 const cw = ref(100);
 const ch = ref(100);
 const mutateRate = ref(5)
+
+let cancelWorkerRender = () => { };
 
 function getPointData(img: ImageData, [x, y]: vec2) {
   const start = ((y * cw.value) + x) * 4
@@ -34,9 +38,6 @@ function clamp(val: number, min: number, max: number) {
 }
 function mutate(num: number, rand: number, min = -Infinity, max = Infinity) {
   return clamp(num + Math.floor((Math.random() - 0.5) * rand * 2), min, max)
-}
-function mutate4(vec: vec4) {
-  return <vec4>structuredClone(vec).map((val) => mutate(val, mutateRate.value, 0, 255))
 }
 function isVisited([x, y]: vec2, visited: boolean[]) {
   return visited[y * cw.value + x]
@@ -75,6 +76,7 @@ function startRender() {
   settingsDisabled.value = true;
 }
 function cancelRender() {
+  cancelWorkerRender()
   settingsDisabled.value = false;
   abortRender.value = true
 }
@@ -82,6 +84,37 @@ function finishRender(data: ImageData) {
   settingsDisabled.value = false;
   getCtx().putImageData(data, 0, 0);
   downloadBlob.value = canvas.value?.toDataURL() ?? err("non-existent canvas")
+}
+
+async function createRender() {
+  startRender()
+  const w = new worker({
+
+  })
+
+  cancelWorkerRender = () => {
+    w.terminate();
+    
+  }
+
+  w.postMessage({
+    cw: cw.value,
+    ch: cw.value,
+    mutateRate: mutateRate.value,
+  })
+
+  await new Promise<void>((res, rej) => {
+    w.onmessage = (event) => {
+      const data: workerResponse = event.data
+      if (data.completed) {
+        finishRender(<ImageData>data.data)
+        res()
+      } else {
+        progress.value = data.message;
+      }
+    }
+  })
+
 }
 
 async function drawRender(ctx: CanvasRenderingContext2D) {
@@ -124,7 +157,7 @@ async function drawRender(ctx: CanvasRenderingContext2D) {
         .map(n => getPointData(img, n))
       const avgPaint = vectorAvg(neighborPaints)
       const avgRed = avgPaint[0]
-      setPointData(img, curr, mutate(avgRed, 15, 0, 255), 0, 0, 255)
+      setPointData(img, curr, mutate(avgRed, mutateRate.value, 0, 255), 0, 0, 255)
       ctx.putImageData(img, 0, 0)
       await new Promise(res => setTimeout(res, 0))
     }
@@ -168,10 +201,12 @@ onMounted(async () => {
         <label for="mutateRate">MutateRate</label>
         <input type="number" name="mutateRate" v-model="mutateRate" min="0" max="255" :disabled="settingsDisabled">
       </div>
-
-      <button v-if="!settingsDisabled" @click="() => drawRender(getCtx())" :disabled="!mounted">Start
-        Render</button>
+      <div v-if="!settingsDisabled" class="renderStartOptions">
+        <button @click="() => drawRender(getCtx())" :disabled="!mounted">Local Render</button>
+        <button @click="createRender()">WebWorker Render</button>
+      </div>
       <button v-else @click="() => cancelRender()">Cancel Render</button>
+
     </div>
     <div class="canvasContainer">
       <canvas class="c" ref="canvas" :width="cw" :height="ch"></canvas>
