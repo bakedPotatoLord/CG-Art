@@ -17,7 +17,7 @@ const abortRender = ref(false)
 
 const cw = ref(100);
 const ch = ref(100);
-const mutateRate = ref(5)
+const mutateRate = ref(15)
 
 let cancelWorkerRender = () => { };
 
@@ -37,7 +37,7 @@ function clamp(val: number, min: number, max: number) {
   return (val > max) ? max : (val < min) ? min : val
 }
 function mutate(num: number, rand: number, min = -Infinity, max = Infinity) {
-  return clamp(num + Math.floor((Math.random() - 0.5) * rand * 2), min, max)
+  return clamp(num + Math.round((Math.random() - 0.5) * rand * 2), min, max)
 }
 function isVisited([x, y]: vec2, visited: boolean[]) {
   return visited[y * cw.value + x]
