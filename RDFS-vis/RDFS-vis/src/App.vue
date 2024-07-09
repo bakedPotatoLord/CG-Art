@@ -10,14 +10,11 @@ const mounted = ref(false)
 const progress = ref("")
 
 const settingsDisabled = ref(false);
-
-const downloadBlob = ref<string|null>(null)
-
+const downloadBlob = ref<string | null>(null)
 const abortRender = ref(false)
 
 const cw = ref(100);
 const ch = ref(100);
-
 const mutateRate = ref(5)
 
 function getPointData(img: ImageData, [x, y]: vec2) {
@@ -41,7 +38,6 @@ function mutate(num: number, rand: number, min = -Infinity, max = Infinity) {
 function mutate4(vec: vec4) {
   return <vec4>structuredClone(vec).map((val) => mutate(val, mutateRate.value, 0, 255))
 }
-
 function isVisited([x, y]: vec2, visited: boolean[]) {
   return visited[y * cw.value + x]
 }
@@ -74,42 +70,30 @@ function vectorAvg(vec: vec4[]) {
 function shuffle(arr: any[]) {
   return arr.sort(() => Math.random() - 0.5)
 }
-function vecEquals(v1: vec2, v2: vec2) {
-  return v1[0] == v2[0] && v2[0] == v2[1]
-}
 
-function startRender(){
+function startRender() {
   settingsDisabled.value = true;
 }
-
-function cancelRender(){
+function cancelRender() {
   settingsDisabled.value = false;
   abortRender.value = true
 }
-
-
-
-function finishRender(data:ImageData){
+function finishRender(data: ImageData) {
   settingsDisabled.value = false;
-
-  getCtx().putImageData(data,0,0);
-
+  getCtx().putImageData(data, 0, 0);
   downloadBlob.value = canvas.value?.toDataURL() ?? err("non-existent canvas")
 }
 
 async function drawRender(ctx: CanvasRenderingContext2D) {
 
-
-  
-
   startRender()
   let numVisited = 0
 
-  const progressMult = 1/((cw.value * ch.value) / 100) 
+  const progressMult = 1 / ((cw.value * ch.value) / 100)
 
   //set up required utility objects
   const visited: boolean[] = Array(cw.value * ch.value).fill(false)
-  const img = ctx.createImageData(ch.value, cw.value)
+  const img = ctx.createImageData(cw.value, ch.value)
 
   //setup que and start point
   const que: vec2[] = [[0, 0]]
@@ -120,14 +104,14 @@ async function drawRender(ctx: CanvasRenderingContext2D) {
   //clear canvas
   ctx.clearRect(0, 0, cw.value, ch.value);
 
-  const update = ()=> progress.value = ("visited: " +
-        (numVisited * progressMult).toFixed(2) +
-        "% que length: " +
-        que.length);
+  const update = () => progress.value = ("visited: " +
+    (numVisited * progressMult).toFixed(2) +
+    "% que length: " +
+    que.length);
 
   //iterate through que
   while (que.length) {
-    if(abortRender.value){ abortRender.value = false; break}
+    if (abortRender.value) { abortRender.value = false; break }
     const curr = <vec2>que.pop()
     if (!isVisited(curr, visited)) {
       update()
@@ -149,21 +133,17 @@ async function drawRender(ctx: CanvasRenderingContext2D) {
   finishRender(img)
 }
 
-function err(msg:string){
-  return <never> console.error("error: "+msg)
+function err(msg: string) {
+  return <never>console.error("error: " + msg)
 }
 
-function getCtx(){
+function getCtx() {
   return canvas.value?.getContext("2d") ?? err("missing canvas")
 }
 
 onMounted(async () => {
-  console.log(canvas.value)
-
   if (canvas.value) {
-    const ctx = <CanvasRenderingContext2D>canvas.value.getContext("2d")
-
-
+    mounted.value = true
   }
 })
 
@@ -189,17 +169,19 @@ onMounted(async () => {
         <input type="number" name="mutateRate" v-model="mutateRate" min="0" max="255" :disabled="settingsDisabled">
       </div>
 
-      <button v-if="!settingsDisabled" @click="() => drawRender(getCtx())" :disabled="mounted">Start
+      <button v-if="!settingsDisabled" @click="() => drawRender(getCtx())" :disabled="!mounted">Start
         Render</button>
       <button v-else @click="() => cancelRender()">Cancel Render</button>
     </div>
     <div class="canvasContainer">
-      <canvas class="c" ref="canvas" :width=" cw " :height=" ch "></canvas>
+      <canvas class="c" ref="canvas" :width="cw" :height="ch"></canvas>
       <div class="details">
         <h4>{{ progress }}</h4>
-        <a :hidden="downloadBlob===null" :href="downloadBlob ?? ''" target="_blank" download="RDFS_art.png" >
-          <button>Download</button>
-        </a>
+        <div class="downloadWrapper" :hidden="downloadBlob === null">
+          <a :href="downloadBlob ?? ''" target="_blank" download="RDFS_art.png">
+            <button>Download</button>
+          </a>
+        </div>
       </div>
 
     </div>
@@ -212,6 +194,24 @@ onMounted(async () => {
   justify-content: center;
   flex-direction: column;
   align-items: center;
+
+  .inputs {
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+
+    .input {
+      display: flex;
+      justify-content: space-between;
+      flex-direction: row;
+      margin-bottom: 0.25rem;
+
+      label {
+        color: white;
+        margin-right: 1rem;
+      }
+    }
+  }
 
   .canvasContainer {
     display: flex;
