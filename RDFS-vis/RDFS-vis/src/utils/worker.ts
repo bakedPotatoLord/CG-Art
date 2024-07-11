@@ -1,7 +1,5 @@
 
-type vec2 = [number, number]
-type vec4 = [number, number, number, number]
-
+import {vec2, vec4, shuffle, mutate, vectorAvg} from "./sharedUtils"
 
 export interface workerResponse {
   completed: boolean
@@ -10,23 +8,7 @@ export interface workerResponse {
 }
 
 
-function clamp(val: number, min: number, max: number) {
-  return (val > max) ? max : (val < min) ? min : val
-}
-function mutate(num: number, rand: number, min = -Infinity, max = Infinity) {
-  return clamp(num + Math.floor((Math.random() - 0.5) * rand * 2), min, max)
-}
 
-
-
-function vectorAvg(vec: vec4[]) {
-  return <vec4>vec.slice(1)
-    .reduce(([a1, a2, a3, a4], [b1, b2, b3, b4]) => [a1 + b1, a2 + b2, a3 + b3, a4 + b4], vec[0])
-    .map(val => val / vec.length)
-}
-function shuffle(arr: any[]) {
-  return arr.sort(() => Math.random() - 0.5)
-}
 
 //end functions /// -------------------------- ///
 
@@ -115,7 +97,7 @@ onmessage = (e) => {
       setVisited(curr, visited, true);
       numVisited++;
       const neighbors = getNeighbors(curr)
-      que.push(...shuffle(neighbors));
+      que.push(...shuffle(neighbors.filter((v)=>!isVisited(v,visited))));
       const neighborPaints = neighbors
         .filter(val => isVisited(val, visited))
         .map(n => getPointData(img, n))

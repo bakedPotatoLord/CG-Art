@@ -3,8 +3,7 @@ import { ref, onMounted } from "vue"
 import worker from "./utils/worker?worker"
 import type { workerResponse } from "./utils/worker"
 
-type vec2 = [number, number]
-type vec4 = [number, number, number, number]
+import { vec2, vec4, shuffle, mutate } from "./utils/sharedUtils"
 
 
 const canvas = ref<HTMLCanvasElement | null>(null)
@@ -33,22 +32,11 @@ function setPointData(img: ImageData, [x, y]: vec2, ...[r = 0, g = 0, b = 0, a =
   img.data[i + 2] = b;
   img.data[i + 3] = a;
 }
-function clamp(val: number, min: number, max: number) {
-  return (val > max) ? max : (val < min) ? min : val
-}
-function mutate(num: number, rand: number, min = -Infinity, max = Infinity) {
-  return clamp(num + Math.round((Math.random() - 0.5) * rand * 2), min, max)
-}
-function isVisited([x, y]: vec2, visited: boolean[]) {
-  return visited[y * cw.value + x]
-}
-function setVisited([x, y]: vec2, visited: boolean[], wasVisited: boolean) {
-  visited[y * cw.value + x] = wasVisited;
-}
 
 function isValid([x, y]: vec2) {
   return x >= 0 && x < cw.value && y >= 0 && y < ch.value;
 }
+
 function getNeighbors([x, y]: vec2) {
   return (<vec2[]>[
     //diagonal
@@ -68,9 +56,14 @@ function vectorAvg(vec: vec4[]) {
     .reduce(([a1, a2, a3, a4], [b1, b2, b3, b4]) => [a1 + b1, a2 + b2, a3 + b3, a4 + b4], vec[0])
     .map(val => val / vec.length)
 }
-function shuffle(arr: any[]) {
-  return arr.sort(() => Math.random() - 0.5)
+
+function isVisited([x, y]: vec2, visited: boolean[]) {
+  return visited[y * cw.value + x]
 }
+function setVisited([x, y]: vec2, visited: boolean[], wasVisited: boolean) {
+  visited[y * cw.value + x] = wasVisited;
+}
+
 
 function startRender() {
   settingsDisabled.value = true;
@@ -88,14 +81,9 @@ function finishRender(data: ImageData) {
 
 async function createRender() {
   startRender()
-  const w = new worker({
+  const w = new worker()
 
-  })
-
-  cancelWorkerRender = () => {
-    w.terminate();
-    
-  }
+  cancelWorkerRender = w.terminate;
 
   w.postMessage({
     cw: cw.value,
