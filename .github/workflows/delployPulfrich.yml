@@ -30,11 +30,12 @@ jobs:
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
-      - name: enter folder
-        run: cd ./pulfrich-effect
+
       - name: install dependencies
-        run: bun i
+        working-directory: ./pulfrich-effect
+        run:  bun i
       - name: vite build
+        working-directory: ./pulfrich-effect
         run: bun run build 
       - name: Setup Pages
         uses: actions/configure-pages@v2
@@ -42,7 +43,7 @@ jobs:
         uses: actions/upload-pages-artifact@v1
         with:
           # Upload entire repository
-          path: './dist'
+          path: './pulfrich-effect/dist'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v1
