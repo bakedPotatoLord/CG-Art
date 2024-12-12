@@ -33,14 +33,14 @@ jobs:
       - name: install dependencies
         run:  bun i
       - name: vite build
-        run: bun run build 
+        run: bun run generate 
       - name: Setup Pages
         uses: actions/configure-pages@v2
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
         with:
           # Upload entire repository
-          path: './dist'
+          path: './output/public'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v1
