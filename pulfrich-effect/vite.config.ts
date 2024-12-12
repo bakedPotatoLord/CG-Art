@@ -6,6 +6,6 @@ export default defineConfig({
   plugins: [vue()],
   base: "/CG-Art/pulfrich-effect/",
   build: {
-    outDir: '/dist/pulfrich-effect/',
+    outDir: './dist/pulfrich-effect/',
   },
 })
