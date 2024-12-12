@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue"
-import worker from "./utils/worker?worker"
-import type { workerResponse } from "./utils/worker"
+import worker from "../utils/worker?worker"
+import { workerResponse } from "../utils/worker";
 
 type vec2 = [number, number]
 type vec4 = [number, number, number, number]
