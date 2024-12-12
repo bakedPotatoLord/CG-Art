@@ -9,6 +9,7 @@ import { RouterView } from 'vue-router';
     <p>go to <NuxtLink to="/pulfritch">/pulfritch</NuxtLink></p>
     <p>go to <NuxtLink to="/RDFS">/RDFS</NuxtLink></p>
     <p>go <NuxtLink to="/">home</NuxtLink></p>
+    <hr>
     <div class="router">
       <RouterView />
     </div>
