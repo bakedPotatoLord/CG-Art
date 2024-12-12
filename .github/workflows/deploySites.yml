@@ -31,10 +31,10 @@ jobs:
         with:
           bun-version: latest
       - name: install dependencies
-        working-directory: ./RSFS-vis
+        working-directory: RDFS-vis
         run:  bun i
       - name: vite build
-        working-directory: ./RSFS-vis
+        working-directory: RSFS-vis
         run: bun run build 
       - name: Setup Pages
         uses: actions/configure-pages@v2
@@ -60,10 +60,10 @@ jobs:
         with:
           bun-version: latest
       - name: install dependencies
-        working-directory: ./pulfrich-effect
+        working-directory: pulfrich-effect
         run:  bun i
       - name: vite build
-        working-directory: ./pulfrich-effect
+        working-directory: pulfrich-effect
         run: bun run build 
       - name: Setup Pages
         uses: actions/configure-pages@v2
