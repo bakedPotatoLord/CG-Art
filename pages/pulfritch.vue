@@ -1,5 +1,6 @@
 <script setup lang="ts">
 
+import { RefSymbol } from '@vue/reactivity';
 import { onMounted, ref } from 'vue';
 
 const canvas = ref<HTMLCanvasElement>();
@@ -10,26 +11,46 @@ const ch = ref(500);
 
 const pause = ref(false);
 
+const text = ref("If you take a\nscreenshot of\nthis text, it will\nlook like noise\nbecasue of the\npulfrich effect");
+
 const otherCanvas =  new OffscreenCanvas(cw.value, ch.value);
 const ctx2 = otherCanvas.getContext('2d');
 
-//define shape here
 
-ctx2.fillStyle = "black";
-ctx2.fillRect(20,20, 20, 20);
+let whereFill = ctx2.getImageData(0,0,ch.value,cw.value).data ;
 
-ctx2.font = "160px Arial";
-ctx2.fillText("hello", 50, 200);
+let solidNoise = generateNoise(cw.value, ch.value, checkFilled);
 
-// end define shape
 
-const whereFill = ctx2.getImageData(0,0,ch.value,cw.value).data;
+
+function handleTextChange() {
+  console.log("text changed", text.value);
+
+  ctx2.clearRect(0,0, cw.value, ch.value);
+  ctx2.fillStyle = "black";
+  ctx2.fillRect(20,20, 20, 20);
+  
+  ctx2.save()
+  for(let line of text.value.split("\n")) {
+    ctx2.font = "64px Arial";
+    ctx2.fillText(line, 50, 64);
+    ctx2.translate(0, 72);
+  }
+  ctx2.restore()
+
+  whereFill = ctx2.getImageData(0,0,ch.value,cw.value).data;
+  solidNoise = generateNoise(cw.value, ch.value, checkFilled);
+}
+
+
+handleTextChange();
+
+
 
 function checkFilled(x: number, y: number) {
   return whereFill[((y * ch.value + x) * 4)+3] !== 0;
 }
 
-const movingNoise = generateNoise(cw.value, ch.value, ()=>true);
 
 function updateNoise() {
   const numPixels = cw.value * ch.value;
@@ -51,10 +72,7 @@ function updateNoise() {
   }
 }
 
-// console.log(checkFilled(100, 100));
-// console.log(checkFilled(50, 50));
 
-const solidNoise = generateNoise(cw.value, ch.value, checkFilled);
 
 onMounted(() => {
   if (canvas.value) {
@@ -104,14 +122,16 @@ function makeCombined(solid: ImageData, moving: ImageData,toFill:ImageData) {
 }
 
 const combinedID = new ImageData(cw.value, ch.value);
+const movingNoise = generateNoise(cw.value, ch.value, ()=>true);
+
 
 function loop(ctx: CanvasRenderingContext2D) {
   requestAnimationFrame(() => loop(ctx));
   if(pause.value) return;
   updateNoise();
-
+  
   const combined = makeCombined(solidNoise, movingNoise,combinedID);
-  console.log(combined.data)
+  // console.log(combined.data)
   ctx.putImageData(combined, 0, 0); 
 
   // ctx.putImageData(solidNoise, 0, 0);
@@ -126,6 +146,9 @@ function loop(ctx: CanvasRenderingContext2D) {
 
 <template>
   <div class="container">
+    <h2>Pulfrich Effect!</h2>
+    <p>This is a neat optical illusion that makes you think you are seeing text, when in reality all you are seeing is noise. The text is much easier to read if you put a sunglass lens over exactly one of your eyes</p>
+    <textarea name="" id="" cols="30" rows="10" v-model="text" @change="handleTextChange"></textarea>
     <div class="btnContainer">
       <button v-on:click="pause = !pause">toggle pause</button>
 
