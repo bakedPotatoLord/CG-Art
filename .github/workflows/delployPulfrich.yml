@@ -37,6 +37,9 @@ jobs:
       - name: vite build
         working-directory: ./pulfrich-effect
         run: bun run build 
+      - name: add folder structure
+        working-directory: ./pulfrich-effect
+        run: mkdir dist/pulfrich-effect  & mv -r dist/* dist/pulfrich-effect
       - name: Setup Pages
         uses: actions/configure-pages@v2
       - name: Upload artifact
