@@ -34,7 +34,7 @@ jobs:
         working-directory: RDFS-vis
         run:  bun i
       - name: vite build
-        working-directory: RSFS-vis
+        working-directory: RDFS-vis
         run: bun run build 
       - name: Setup Pages
         uses: actions/configure-pages@v2
@@ -42,7 +42,7 @@ jobs:
         uses: actions/upload-pages-artifact@v1
         with:
           # Upload entire repository
-          path: './RSFS-vis/dist'
+          path: './RDFS-vis/dist'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v1
